@@ -4,7 +4,7 @@ import numpy as np
 def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column=None, category_column=None, 
                             x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, 
                             show_slider=True, show_button=True, width=None, height=None):
-    ''' Makes the animated and interactive bubble charts from a given dataset.''''
+    ''' Makes the animated and interactive bubble charts from a given dataset.'''
     
     # Make the grid
     years = dataset[time_column].unique()
