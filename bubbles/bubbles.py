@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-# from __future__ import division
-# import plotly.plotly as py
 
 def make_grid(dataset, col_name_template, column_names, time_column, years=None):
     grid = pd.DataFrame()
