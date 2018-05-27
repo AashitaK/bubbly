@@ -13,6 +13,7 @@ Dependencies
 Installation
 -------------
 .. code:: python
+
   pip install bubbles
   
 Usage
