@@ -31,7 +31,7 @@ Usage
     x_logscale=True, height=650)
   iplot(figure, config={'scrollzoom': True})
     
-Please refer to the `Jupyter notebook here <https://www.kaggle.com/aashita/animated-graphs-using-plotly/>`_ for illustration of the plotting function.
+Please refer to the `Jupyter notebook here <https://www.kaggle.com/aashita/guide-to-animated-bubble-charts-using-plotly/>`_ for illustration of the plotting function.
 
 
 
