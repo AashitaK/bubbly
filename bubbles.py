@@ -1,3 +1,8 @@
+import pandas as pd
+import numpy as np
+from __future__ import division
+import plotly.plotly as py
+
 def make_grid(dataset, col_name_template, column_names, time_column, years=None):
     grid = pd.DataFrame()
     if years is None:
@@ -239,5 +244,7 @@ def interactive_bubble_plot(dataset, x_column, y_column, dot_column, time_column
     # Plot the animation
     if show_slider:
         figure['layout']['sliders'] = [sliders_dict]
+        
+    return figure
 
-    iplot(figure, config={'scrollzoom': True})
+    # iplot(figure, config={'scrollzoom': True})
