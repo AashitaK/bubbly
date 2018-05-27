@@ -14,7 +14,7 @@ Installation
 -------------
 .. code:: python
 
-  pip install bubble
+  pip install bubbly
   
 Usage
 -------
@@ -23,7 +23,7 @@ Usage
   from __future__ import division
   from plotly.offline import init_notebook_mode, iplot
   init_notebook_mode()
-  from bubble.plot import bubbleplot
+  from bubbly.bubbly import bubbleplot
   
   figure = bubbleplot(dataset=gapminder_indicators, x_column='gdpPercap', y_column='lifeExp', 
     dot_column='country', time_column='year', size_column='pop', category_column='continent', 
