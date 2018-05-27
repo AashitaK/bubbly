@@ -193,7 +193,7 @@ def make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_
     return data_dict
 
     
-def interactive_bubble_plot(dataset, x_column, y_column, dot_column, time_column, size_column=None, category_column=None, 
+def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column=None, category_column=None, 
                             x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, 
                             show_slider=True, show_button=True, width=None, height=None):
     ''' Makes the animated and interactive bubble charts from a given dataset.''''
