@@ -6,6 +6,7 @@ A module for plotting interactive and animated bubble charts using Plotly.
 Dependencies
 ------------
 * Python 3.4+
+* numpy
 * pandas 
 * plotly
 
