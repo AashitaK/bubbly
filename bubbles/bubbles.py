@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 
 def make_grid(dataset, col_name_template, column_names, time_column, years=None):
+    '''Makes the grid for the plot as a pandas DataFrame by-passing the use of `plotly.grid_objs`
+    that is unavailable in the offline mode for `plotly`. The grids are designed using the `col_name_template`
+    from the `column_names` of the `dataset`.'''
+    
     grid = pd.DataFrame()
     if years is None:
         years = dataset[time_column].unique()
@@ -15,7 +19,12 @@ def make_grid(dataset, col_name_template, column_names, time_column, years=None)
                 grid = grid.append({'value': list(dataset_by_year[col_name]), 'key': temp}, ignore_index=True)
     return grid
 
+
 def make_grid_with_categories(dataset, col_name_template, column_names, time_column, category_column, years=None, categories=None):
+    '''Makes the grid for the plot as a pandas DataFrame by-passing the use of plotly.grid_objs
+    that is unavailable in the offline mode for plotly. The grids are designed using the `col_name_template`
+    from the `column_names` of the `dataset` using the `category_column` for catergories.'''
+    
     grid = pd.DataFrame()
     if categories is None:
         categories = dataset[category_column].unique() 
@@ -33,6 +42,8 @@ def make_grid_with_categories(dataset, col_name_template, column_names, time_col
 
 
 def add_slider_steps(sliders_dict, year):
+    '''Adds the slider steps.'''
+    
     slider_step = {'args': [
         [year],
         {'frame': {'duration': 300, 'redraw': False},
@@ -47,6 +58,8 @@ def add_slider_steps(sliders_dict, year):
 def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, 
             show_slider=True, slider_scale=None, show_button=True, showlegend=False,
             width=None, height=None):
+    '''Sets the layout for the figure.'''
+    
     figure = {
         'data': [],
         'layout': {},
@@ -136,7 +149,9 @@ def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logsc
     else:
         return figure
     
-def set_axisrange(figure, x_values, y_values, x_logscale=False, y_logscale=False):
+def set_axisrange(figure, x_values, y_values, x_logscale=False, y_logscale=False): 
+    ''' Sets the x-axis and y-axis ranges for the figure.'''
+    
     if x_logscale:
         xmin = min(np.log10(x_values))*0.98
         xmax = max(np.log10(x_values))*1.02
@@ -156,6 +171,8 @@ def set_axisrange(figure, x_values, y_values, x_logscale=False, y_logscale=False
     
     
 def make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column=None, category=None):
+    ''' Makes the dictionary for the data that can be added to the figure or time frames.'''
+    
     data_dict = {
         'x': grid.loc[grid['key']==col_name_template.format(year, x_column, category), 'value'].values[0],
         'y': grid.loc[grid['key']==col_name_template.format(year, y_column, category), 'value'].values[0],
@@ -179,6 +196,8 @@ def make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_
 def interactive_bubble_plot(dataset, x_column, y_column, dot_column, time_column, size_column=None, category_column=None, 
                             x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, 
                             show_slider=True, show_button=True, width=None, height=None):
+    ''' Makes the animated and interactive bubble charts from a given dataset.''''
+    
     # Make the grid
     years = dataset[time_column].unique()
     
@@ -244,5 +263,3 @@ def interactive_bubble_plot(dataset, x_column, y_column, dot_column, time_column
         figure['layout']['sliders'] = [sliders_dict]
         
     return figure
-
-    # iplot(figure, config={'scrollzoom': True})
