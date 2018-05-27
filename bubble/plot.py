@@ -1,6 +1,78 @@
 import pandas as pd
 import numpy as np
 
+def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column=None, category_column=None, 
+                            x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, 
+                            show_slider=True, show_button=True, width=None, height=None):
+    ''' Makes the animated and interactive bubble charts from a given dataset.''''
+    
+    # Make the grid
+    years = dataset[time_column].unique()
+    
+    if size_column:
+        column_names = [x_column, y_column, dot_column, size_column]
+    else:
+        column_names = [x_column, y_column, dot_column]
+        
+    if category_column:
+        categories = dataset[category_column].unique()
+        col_name_template = '{}+{}+{}_grid'
+        grid = make_grid_with_categories(dataset, col_name_template, column_names, 
+                                         time_column, category_column, years, categories)
+        showlegend=True
+    else:
+        col_name_template = '{}+{}_grid'
+        grid = make_grid(dataset, col_name_template, column_names, time_column, years)
+        showlegend=False
+        
+    # Set the layout
+    if show_slider:          
+        figure, sliders_dict = set_layout(x_title, y_title, title, x_logscale, y_logscale, 
+                show_slider, years, show_button, showlegend, width, height)
+    else:
+        figure = set_layout(x_title, y_title, title, x_logscale, y_logscale, 
+                show_slider, None, show_button, showlegend, width, height)
+    
+    # Add the frames
+    year = min(years)
+    if category_column:
+        # Add the base frame
+        for category in categories:
+            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, category)
+            figure['data'].append(data_dict)
+            
+        # Add time frames
+        for year in years:
+            frame = {'data': [], 'name': str(year)}
+            for category in categories:
+                data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, category)
+                frame['data'].append(data_dict)
+
+            figure['frames'].append(frame) 
+
+            if show_slider:
+                add_slider_steps(sliders_dict, year)
+    else:
+        # Add the base frame
+        data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column)
+        figure['data'].append(data_dict)
+        # Add time frames
+        for year in years:
+            frame = {'data': [], 'name': str(year)}
+            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column)
+            frame['data'].append(data_dict)
+            figure['frames'].append(frame) 
+            if show_slider:
+                add_slider_steps(sliders_dict, year) 
+    
+    set_axisrange(figure, dataset[x_column], dataset[y_column], x_logscale, y_logscale)            
+    # Plot the animation
+    if show_slider:
+        figure['layout']['sliders'] = [sliders_dict]
+        
+    return figure
+
+
 def make_grid(dataset, col_name_template, column_names, time_column, years=None):
     '''Makes the grid for the plot as a pandas DataFrame by-passing the use of `plotly.grid_objs`
     that is unavailable in the offline mode for `plotly`. The grids are designed using the `col_name_template`
@@ -191,75 +263,3 @@ def make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_
         data_dict['name'] = category
     
     return data_dict
-
-    
-def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column=None, category_column=None, 
-                            x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, 
-                            show_slider=True, show_button=True, width=None, height=None):
-    ''' Makes the animated and interactive bubble charts from a given dataset.''''
-    
-    # Make the grid
-    years = dataset[time_column].unique()
-    
-    if size_column:
-        column_names = [x_column, y_column, dot_column, size_column]
-    else:
-        column_names = [x_column, y_column, dot_column]
-        
-    if category_column:
-        categories = dataset[category_column].unique()
-        col_name_template = '{}+{}+{}_grid'
-        grid = make_grid_with_categories(dataset, col_name_template, column_names, 
-                                         time_column, category_column, years, categories)
-        showlegend=True
-    else:
-        col_name_template = '{}+{}_grid'
-        grid = make_grid(dataset, col_name_template, column_names, time_column, years)
-        showlegend=False
-        
-    # Set the layout
-    if show_slider:          
-        figure, sliders_dict = set_layout(x_title, y_title, title, x_logscale, y_logscale, 
-                show_slider, years, show_button, showlegend, width, height)
-    else:
-        figure = set_layout(x_title, y_title, title, x_logscale, y_logscale, 
-                show_slider, None, show_button, showlegend, width, height)
-    
-    # Add the frames
-    year = min(years)
-    if category_column:
-        # Add the base frame
-        for category in categories:
-            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, category)
-            figure['data'].append(data_dict)
-            
-        # Add time frames
-        for year in years:
-            frame = {'data': [], 'name': str(year)}
-            for category in categories:
-                data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, category)
-                frame['data'].append(data_dict)
-
-            figure['frames'].append(frame) 
-
-            if show_slider:
-                add_slider_steps(sliders_dict, year)
-    else:
-        # Add the base frame
-        data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column)
-        figure['data'].append(data_dict)
-        # Add time frames
-        for year in years:
-            frame = {'data': [], 'name': str(year)}
-            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column)
-            frame['data'].append(data_dict)
-            figure['frames'].append(frame) 
-            if show_slider:
-                add_slider_steps(sliders_dict, year) 
-    
-    set_axisrange(figure, dataset[x_column], dataset[y_column], x_logscale, y_logscale)            
-    # Plot the animation
-    if show_slider:
-        figure['layout']['sliders'] = [sliders_dict]
-        
-    return figure
