@@ -4,7 +4,7 @@ def readme():
     with open('README.rst') as file:
         return file.read()
 
-setup(name='bubbleplot',
+setup(name='bubbly',
       version='0.0.1',
       description='A module for plotting interactive and animated bubble charts using Plotly',
       long_description=readme(),
@@ -13,7 +13,7 @@ setup(name='bubbleplot',
       author='Aashita Kesarwani',
       author_email='kesar01@gmail.com',
       license='MIT',
-      packages=['bubbleplot'],
+      packages=['bubbly'],
       install_requires=[
           'plotly',
           'pandas',
