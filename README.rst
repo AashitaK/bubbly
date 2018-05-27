@@ -10,6 +10,11 @@ Dependencies
 * pandas 
 * plotly
 
+Installation
+-------------
+.. code::
+  pip install bubbles
+  
 Usage
 -------
 .. code:: python
