@@ -1,4 +1,4 @@
-bubbles
+bubble
 ******************************
 
 A module for plotting interactive and animated bubble charts using Plotly. It is especially suitable for use in Jupyter notebooks and is designed to work with `plotly`'s offline mode such as in Kaggle kernels. 
@@ -14,7 +14,7 @@ Installation
 -------------
 .. code:: python
 
-  pip install bubbles
+  pip install bubble
   
 Usage
 -------
