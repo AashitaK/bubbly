@@ -23,9 +23,9 @@ Usage
   from __future__ import division
   from plotly.offline import init_notebook_mode, iplot
   init_notebook_mode()
-  from bubbles import interactive_bubble_plot
+  from bubble.plot import bubbleplot
   
-  figure = interactive_bubble_plot(dataset=gapminder_indicators, x_column='gdpPercap', y_column='lifeExp', 
+  figure = bubbleplot(dataset=gapminder_indicators, x_column='gdpPercap', y_column='lifeExp', 
     dot_column='country', time_column='year', size_column='pop', category_column='continent', 
     x_title="GDP per Capita", y_title="Life Expectancy", title='Gapminder Global Indicators',
     x_logscale=True, height=650)
