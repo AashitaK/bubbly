@@ -40,14 +40,14 @@ def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column
     if category_column:
         # Add the base frame
         for category in categories:
-            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, category)
+            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, scale_bubble, category)
             figure['data'].append(data_dict)
             
         # Add time frames
         for year in years:
             frame = {'data': [], 'name': str(year)}
             for category in categories:
-                data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, category)
+                data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, scale_bubble, category)
                 frame['data'].append(data_dict)
 
             figure['frames'].append(frame) 
@@ -56,12 +56,12 @@ def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column
                 add_slider_steps(sliders_dict, year)
     else:
         # Add the base frame
-        data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref)
+        data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, scale_bubble)
         figure['data'].append(data_dict)
         # Add time frames
         for year in years:
             frame = {'data': [], 'name': str(year)}
-            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref)
+            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, scale_bubble)
             frame['data'].append(data_dict)
             figure['frames'].append(frame) 
             if show_slider:
