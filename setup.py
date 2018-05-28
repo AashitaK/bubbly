@@ -5,7 +5,7 @@ def readme():
         return file.read()
 
 setup(name='bubbly',
-      version='0.0.1',
+      version='1.0.0',
       description='A module for plotting interactive and animated bubble charts using Plotly',
       long_description=readme(),
       url='https://github.com/AashitaK/nyt-comments',
