@@ -2,17 +2,19 @@ import pandas as pd
 import numpy as np
 
 def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column=None, category_column=None, 
-                            x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, 
-                            show_slider=True, show_button=True, width=None, height=None):
+                x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, xrange=None, yrange=None, 
+                scale_bubble=1, show_slider=True, show_button=True, width=None, height=None):
     ''' Makes the animated and interactive bubble charts from a given dataset.'''
     
     # Make the grid
     years = dataset[time_column].unique()
-    
+     
     if size_column:
         column_names = [x_column, y_column, dot_column, size_column]
+        sizeref = 2.*max(dataset[size_column])/(scale_bubble*80**2) # Set the reference size for the bubbles
     else:
         column_names = [x_column, y_column, dot_column]
+        sizeref = None
         
     if category_column:
         categories = dataset[category_column].unique()
@@ -38,14 +40,14 @@ def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column
     if category_column:
         # Add the base frame
         for category in categories:
-            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, category)
+            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, category)
             figure['data'].append(data_dict)
             
         # Add time frames
         for year in years:
             frame = {'data': [], 'name': str(year)}
             for category in categories:
-                data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, category)
+                data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, category)
                 frame['data'].append(data_dict)
 
             figure['frames'].append(frame) 
@@ -54,24 +56,56 @@ def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column
                 add_slider_steps(sliders_dict, year)
     else:
         # Add the base frame
-        data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column)
+        data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref)
         figure['data'].append(data_dict)
         # Add time frames
         for year in years:
             frame = {'data': [], 'name': str(year)}
-            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column)
+            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref)
             frame['data'].append(data_dict)
             figure['frames'].append(frame) 
             if show_slider:
                 add_slider_steps(sliders_dict, year) 
     
-    set_axisrange(figure, dataset[x_column], dataset[y_column], x_logscale, y_logscale)            
-    # Plot the animation
+    if xrange:
+        figure['layout']['xaxis']['range'] = xrange
+    else:
+        set_xrange(figure, dataset[x_column], x_logscale) 
+    
+    if yrange:
+        figure['layout']['yaxis']['range'] = yrange
+    else:
+        set_yrange(figure, dataset[y_column], y_logscale)
+    
     if show_slider:
         figure['layout']['sliders'] = [sliders_dict]
         
     return figure
 
+def set_xrange(figure, x_values, x_logscale=False): 
+    ''' Sets the x-axis range for the figure.'''
+    
+    if x_logscale:
+        xmin = min(np.log10(x_values))*0.96
+        xmax = max(np.log10(x_values))*1.04
+    else:
+        xmin = min(x_values)*0.7
+        xmax = max(x_values)*1.4
+   
+    figure['layout']['xaxis']['range'] = [xmin, xmax]
+    
+def set_yrange(figure, y_values, y_logscale=False): 
+    ''' Sets the y-axis range for the figure.'''
+    
+    if y_logscale:
+        ymin = min(np.log10(y_values))*0.97
+        ymax = max(np.log10(y_values))*1.04
+    else:
+        ymin = min(y_values)*0.7
+        ymax = max(y_values)*1.4
+        
+    figure['layout']['yaxis']['range'] = [ymin, ymax] 
+    
 
 def make_grid(dataset, col_name_template, column_names, time_column, years=None):
     '''Makes the grid for the plot as a pandas DataFrame by-passing the use of `plotly.grid_objs`
@@ -149,7 +183,7 @@ def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logsc
     figure['layout']['title'] = title    
     figure['layout']['hovermode'] = 'closest'
     figure['layout']['showlegend'] = showlegend
-    figure['layout']['margin'] = dict(b=200, t=100, pad=5)
+    figure['layout']['margin'] = dict(b=50, t=50, pad=5)
     if width:
         figure['layout']['width'] = width
     if height:
@@ -221,28 +255,8 @@ def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logsc
     else:
         return figure
     
-def set_axisrange(figure, x_values, y_values, x_logscale=False, y_logscale=False): 
-    ''' Sets the x-axis and y-axis ranges for the figure.'''
-    
-    if x_logscale:
-        xmin = min(np.log10(x_values))*0.98
-        xmax = max(np.log10(x_values))*1.02
-    else:
-        xmin = min(x_values)*0.75
-        xmax = max(x_values)*1.25
-        
-    if y_logscale:
-        ymin = min(np.log10(y_values))*0.98
-        ymax = max(np.log10(y_values))*1.02
-    else:
-        ymin = min(y_values)*0.75
-        ymax = max(y_values)*1.25
-        
-    figure['layout']['xaxis']['range'] = [xmin, xmax]
-    figure['layout']['yaxis']['range'] = [ymin, ymax]
-    
-    
-def make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column=None, category=None):
+def make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column=None, 
+                         sizeref=200000, scale_bubble=1, category=None):
     ''' Makes the dictionary for the data that can be added to the figure or time frames.'''
     
     data_dict = {
@@ -255,10 +269,13 @@ def make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_
     if size_column:
         data_dict['marker'] = {
             'sizemode': 'area',
-            'sizeref': 200000,
+            'sizeref': sizeref,
             'size': grid.loc[grid['key']==col_name_template.format(year, size_column, category), 'value'].values[0],
         }
-        
+    else:
+        data_dict['marker'] = {
+            'size': 10*scale_bubble,
+        }
     if category:
         data_dict['name'] = category
     
