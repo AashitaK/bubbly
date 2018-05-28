@@ -1,17 +1,21 @@
 import pandas as pd
 import numpy as np
 
-def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column=None, color_column=None, category_column=None, 
+def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column=None, color_column=None,  
                 x_title=None, y_title=None, title=None, colorbar_title=None, 
                 x_logscale=False, y_logscale=False, xrange=None, yrange=None, 
-                scale_bubble=1, colorscale=None, show_slider=True, show_button=True, show_colorbar=True, 
-                width=None, height=None):
+                scale_bubble=1, colorscale=None, width=None, height=None,
+                show_slider=True, show_button=True, show_colorbar=True):
     ''' Makes the animated and interactive bubble charts from a given dataset.'''
     
-    # If both color_column and category_column are not None, then category_column takes precedence and color_column is ignored
-    if (color_column is not None) & (category_column is not None): 
-        color_column=None
-    
+    # Set category_column as None and update it as color_column only in case
+    # color_column is not None and categorical, in which case set color_column as None
+    category_column = None
+    if color_column:
+        if dataset[color_column].dtype.name in ['category', 'object']:
+            category_column = color_column
+            color_column = None
+        
     # Set the variables for making the grid
     years = dataset[time_column].unique()
     column_names = [x_column, y_column, dot_column]
