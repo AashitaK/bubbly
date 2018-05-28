@@ -71,57 +71,33 @@ def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column
     else:
         # Add the base frame
         data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, 
-                                         size_column, sizeref, scale_bubble, color_column)
+                        size_column, sizeref, scale_bubble, color_column, colorscale, show_colorbar, colorbar_title)
         figure['data'].append(data_dict)
         # Add time frames
         for year in years:
             frame = {'data': [], 'name': str(year)}
             data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, 
-                                             size_column, sizeref, scale_bubble, color_column)
+                            size_column, sizeref, scale_bubble, color_column, colorscale, show_colorbar, colorbar_title)
             frame['data'].append(data_dict)
             figure['frames'].append(frame) 
             if show_slider:
                 add_slider_steps(sliders_dict, year) 
     
-    if xrange:
-        figure['layout']['xaxis']['range'] = xrange
-    else:
-        set_xrange(figure, dataset[x_column], x_logscale) 
+    # Set ranges for the axes
+    if xrange is None:
+        xrange = set_range(dataset[x_column], x_logscale) 
     
-    if yrange:
-        figure['layout']['yaxis']['range'] = yrange
-    else:
-        set_yrange(figure, dataset[y_column], y_logscale)
+    if yrange is None:
+        yrange = set_range(dataset[y_column], y_logscale)
+        
+    figure['layout']['xaxis']['range'] = xrange
+    figure['layout']['yaxis']['range'] = yrange
     
     if show_slider:
         figure['layout']['sliders'] = [sliders_dict]
         
     return figure
 
-def set_xrange(figure, x_values, x_logscale=False): 
-    ''' Sets the x-axis range for the figure.'''
-    
-    if x_logscale:
-        xmin = min(np.log10(x_values))*0.96
-        xmax = max(np.log10(x_values))*1.04
-    else:
-        xmin = min(x_values)*0.7
-        xmax = max(x_values)*1.4
-   
-    figure['layout']['xaxis']['range'] = [xmin, xmax]
-    
-def set_yrange(figure, y_values, y_logscale=False): 
-    ''' Sets the y-axis range for the figure.'''
-    
-    if y_logscale:
-        ymin = min(np.log10(y_values))*0.97
-        ymax = max(np.log10(y_values))*1.04
-    else:
-        ymin = min(y_values)*0.7
-        ymax = max(y_values)*1.4
-        
-    figure['layout']['yaxis']['range'] = [ymin, ymax] 
-    
 
 def make_grid(dataset, col_name_template, column_names, time_column, years=None):
     '''Makes the grid for the plot as a pandas DataFrame by-passing the use of `plotly.grid_objs`
@@ -162,19 +138,6 @@ def make_grid_with_categories(dataset, col_name_template, column_names, time_col
                     grid = grid.append({'value': list(dataset_by_year_and_cat[col_name]), 'key': temp}, ignore_index=True) 
     return grid
 
-
-def add_slider_steps(sliders_dict, year):
-    '''Adds the slider steps.'''
-    
-    slider_step = {'args': [
-        [year],
-        {'frame': {'duration': 300, 'redraw': False},
-         'mode': 'immediate',
-       'transition': {'duration': 300}}
-     ],
-     'label': year,
-     'method': 'animate'}
-    sliders_dict['steps'].append(slider_step)
   
  
 def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, 
@@ -182,12 +145,14 @@ def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logsc
             width=None, height=None):
     '''Sets the layout for the figure.'''
     
+    # Define the figure object as a dictionary
     figure = {
         'data': [],
         'layout': {},
         'frames': []
     }
     
+    # Start with filling the layout first
     figure['layout']['xaxis'] = {'title': x_title, 'autorange': False}
     figure['layout']['yaxis'] = {'title': y_title, 'autorange': False} 
 
@@ -204,74 +169,108 @@ def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logsc
         figure['layout']['width'] = width
     if height:
         figure['layout']['height'] = height
-    # Add slider for time scale
-    if show_slider:
-        figure['layout']['sliders'] = {
-            'args': [
-                'slider.value', {
-                    'duration': 400,
-                    'ease': 'cubic-in-out'
-                }
-            ],
-            'initialValue': min(slider_scale),
-            'plotlycommand': 'animate',
-            'values': slider_scale,
-            'visible': True
-        }
-        sliders_dict = {
-            'active': 0,
-            'yanchor': 'top',
-            'xanchor': 'left',
-            'currentvalue': {
-                'font': {'size': 20},
-                'prefix': 'Year:',
-                'visible': True,
-                'xanchor': 'right'
-            },
-            'transition': {'duration': 300, 'easing': 'cubic-in-out'},
-            'pad': {'b': 10, 't': 50},
-            'len': 0.9,
-            'x': 0.1,
-            'y': 0,
-            'steps': []
-        }
     
-    # Add pause-play button
-    if show_button:
-        figure['layout']['updatemenus'] = [
-            {
-                'buttons': [
-                    {
-                        'args': [None, {'frame': {'duration': 500, 'redraw': False},
-                                 'fromcurrent': True, 'transition': {'duration': 300, 'easing': 'quadratic-in-out'}}],
-                        'label': 'Play',
-                        'method': 'animate'
-                    },
-                    {
-                        'args': [[None], {'frame': {'duration': 0, 'redraw': False}, 'mode': 'immediate',
-                        'transition': {'duration': 0}}],
-                        'label': 'Pause',
-                        'method': 'animate'
-                    }
-                ],
-                'direction': 'left',
-                'pad': {'r': 10, 't': 87},
-                'showactive': False,
-                'type': 'buttons',
-                'x': 0.1,
-                'xanchor': 'right',
-                'y': 0,
-                'yanchor': 'top'
-            }
-        ]
-    
-    # Return the figure object
+    # Add slider for the time scale
     if show_slider: 
+        sliders_dict = add_slider(figure, slider_scale)
+    
+    # Add a pause-play button
+    if show_button:
+        add_button(figure)
+
+    # Return the figure object
+    if show_slider:
         return figure, sliders_dict
     else:
         return figure
-      
+    
+    
+def add_slider(figure, slider_scale):
+    figure['layout']['sliders'] = {
+        'args': [
+            'slider.value', {
+                'duration': 400,
+                'ease': 'cubic-in-out'
+            }
+        ],
+        'initialValue': min(slider_scale),
+        'plotlycommand': 'animate',
+        'values': slider_scale,
+        'visible': True
+    }
+    sliders_dict = {
+        'active': 0,
+        'yanchor': 'top',
+        'xanchor': 'left',
+        'currentvalue': {
+            'font': {'size': 20},
+            'prefix': 'Year:',
+            'visible': True,
+            'xanchor': 'right'
+        },
+        'transition': {'duration': 300, 'easing': 'cubic-in-out'},
+        'pad': {'b': 10, 't': 50},
+        'len': 0.9,
+        'x': 0.1,
+        'y': 0,
+        'steps': []
+    }
+    return sliders_dict
 
+def add_slider_steps(sliders_dict, year):
+    '''Adds the slider steps.'''
+    
+    slider_step = {'args': [
+        [year],
+        {'frame': {'duration': 300, 'redraw': False},
+         'mode': 'immediate',
+       'transition': {'duration': 300}}
+     ],
+     'label': year,
+     'method': 'animate'}
+    sliders_dict['steps'].append(slider_step)
+    
+def add_button(figure):
+    figure['layout']['updatemenus'] = [
+        {
+            'buttons': [
+                {
+                    'args': [None, {'frame': {'duration': 500, 'redraw': False},
+                             'fromcurrent': True, 'transition': {'duration': 300, 'easing': 'quadratic-in-out'}}],
+                    'label': 'Play',
+                    'method': 'animate'
+                },
+                {
+                    'args': [[None], {'frame': {'duration': 0, 'redraw': False}, 'mode': 'immediate',
+                    'transition': {'duration': 0}}],
+                    'label': 'Pause',
+                    'method': 'animate'
+                }
+            ],
+            'direction': 'left',
+            'pad': {'r': 10, 't': 87},
+            'showactive': False,
+            'type': 'buttons',
+            'x': 0.1,
+            'xanchor': 'right',
+            'y': 0,
+            'yanchor': 'top'
+        }
+    ]
+    
+def set_range(values, logscale=False): 
+    ''' Finds the axis range for the figure.'''
+    
+    if logscale:
+        rmin = min(np.log10(values))*0.97
+        rmax = max(np.log10(values))*1.04
+    else:
+        rmin = min(values)*0.7
+        rmax = max(values)*1.4
+        
+    return [rmin, rmax] 
+    
+    
 def make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column=None, 
                          sizeref=200000, scale_bubble=1, color_column=None, colorscale=None, show_colorbar=True,
                          colorbar_title=None, category=None):
