@@ -1,21 +1,28 @@
 import pandas as pd
 import numpy as np
 
-def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column=None, category_column=None, 
-                x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, xrange=None, yrange=None, 
-                scale_bubble=1, show_slider=True, show_button=True, width=None, height=None):
+def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column=None, color_column=None, category_column=None, 
+                x_title=None, y_title=None, title=None, colorbar_title=None, 
+                x_logscale=False, y_logscale=False, xrange=None, yrange=None, 
+                scale_bubble=1, colorscale=None, show_slider=True, show_button=True, show_colorbar=True, 
+                width=None, height=None):
     ''' Makes the animated and interactive bubble charts from a given dataset.'''
     
-    # Make the grid
+    # If both color_column and category_column are not None, then category_column takes precedence and color_column is ignored
+    if (color_column is not None) & (category_column is not None): 
+        color_column=None
+    
+    # Set the variables for making the grid
     years = dataset[time_column].unique()
-     
+    column_names = [x_column, y_column, dot_column]
+    
     if size_column:
-        column_names = [x_column, y_column, dot_column, size_column]
-        sizeref = 2.*max(dataset[size_column])/(scale_bubble*80**2) # Set the reference size for the bubbles
-    else:
-        column_names = [x_column, y_column, dot_column]
-        sizeref = None
+        column_names.append(size_column)
+    
+    if color_column:
+        column_names.append(color_column)
         
+    # Make the grid
     if category_column:
         categories = dataset[category_column].unique()
         col_name_template = '{}+{}+{}_grid'
@@ -35,19 +42,26 @@ def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column
         figure = set_layout(x_title, y_title, title, x_logscale, y_logscale, 
                 show_slider, None, show_button, showlegend, width, height)
     
+    if size_column:
+        sizeref = 2.*max(dataset[size_column])/(scale_bubble*80**2) # Set the reference size for the bubbles
+    else:
+        sizeref = None
+        
     # Add the frames
-    year = min(years)
+    year = min(years) # The earliest year for the base frame
     if category_column:
         # Add the base frame
         for category in categories:
-            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, scale_bubble, category)
+            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, 
+                                             size_column, sizeref, scale_bubble, category=category)
             figure['data'].append(data_dict)
             
         # Add time frames
         for year in years:
             frame = {'data': [], 'name': str(year)}
             for category in categories:
-                data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, scale_bubble, category)
+                data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, 
+                                                 size_column, sizeref, scale_bubble, category=category)
                 frame['data'].append(data_dict)
 
             figure['frames'].append(frame) 
@@ -56,12 +70,14 @@ def bubbleplot(dataset, x_column, y_column, dot_column, time_column, size_column
                 add_slider_steps(sliders_dict, year)
     else:
         # Add the base frame
-        data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, scale_bubble)
+        data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, 
+                                         size_column, sizeref, scale_bubble, color_column)
         figure['data'].append(data_dict)
         # Add time frames
         for year in years:
             frame = {'data': [], 'name': str(year)}
-            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column, sizeref, scale_bubble)
+            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, 
+                                             size_column, sizeref, scale_bubble, color_column)
             frame['data'].append(data_dict)
             figure['frames'].append(frame) 
             if show_slider:
@@ -254,9 +270,11 @@ def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logsc
         return figure, sliders_dict
     else:
         return figure
-    
+      
+
 def make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_column, size_column=None, 
-                         sizeref=200000, scale_bubble=1, category=None):
+                         sizeref=200000, scale_bubble=1, color_column=None, colorscale=None, show_colorbar=True,
+                         colorbar_title=None, category=None):
     ''' Makes the dictionary for the data that can be added to the figure or time frames.'''
     
     data_dict = {
@@ -267,16 +285,27 @@ def make_data_dictionary(grid, col_name_template, year, x_column, y_column, dot_
         }
     
     if size_column:
-        data_dict['marker'] = {
-            'sizemode': 'area',
-            'sizeref': sizeref,
-            'size': grid.loc[grid['key']==col_name_template.format(year, size_column, category), 'value'].values[0],
-        }
+        if color_column:
+            data_dict['marker'] = {
+                'sizemode': 'area',
+                'sizeref': sizeref,
+                'size': grid.loc[grid['key']==col_name_template.format(year, size_column, category), 'value'].values[0],
+                'color': grid.loc[grid['key']==col_name_template.format(year, color_column), 'value'].values[0],
+                'colorbar': {'title': colorbar_title},
+                'colorscale': colorscale
+            }
+        else:
+            data_dict['marker'] = {
+                'sizemode': 'area',
+                'sizeref': sizeref,
+                'size': grid.loc[grid['key']==col_name_template.format(year, size_column, category), 'value'].values[0],
+            }
     else:
         data_dict['marker'] = {
             'size': 10*scale_bubble,
         }
+        
     if category:
         data_dict['name'] = category
-    
+        
     return data_dict
