@@ -3,7 +3,7 @@ import numpy as np
 
 def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_column=None, color_column=None,  
                 x_title=None, y_title=None, title=None, colorbar_title=None, 
-                x_logscale=False, y_logscale=False, xrange=None, yrange=None, 
+                x_logscale=False, y_logscale=False, x_range=None, y_range=None, 
                 scale_bubble=1, colorscale=None, width=None, height=None,
                 show_slider=True, show_button=True, show_colorbar=True):
     ''' Makes the animated and interactive bubble charts from a given dataset.'''
@@ -88,14 +88,14 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_col
                 add_slider_steps(sliders_dict, year) 
     
     # Set ranges for the axes
-    if xrange is None:
-        xrange = set_range(dataset[x_column], x_logscale) 
+    if x_range is None:
+        x_range = set_range(dataset[x_column], x_logscale) 
     
-    if yrange is None:
-        yrange = set_range(dataset[y_column], y_logscale)
+    if y_range is None:
+        y_range = set_range(dataset[y_column], y_logscale)
         
-    figure['layout']['xaxis']['range'] = xrange
-    figure['layout']['yaxis']['range'] = yrange
+    figure['layout']['xaxis']['range'] = x_range
+    figure['layout']['yaxis']['range'] = y_range
     
     if show_slider:
         figure['layout']['sliders'] = [sliders_dict]
