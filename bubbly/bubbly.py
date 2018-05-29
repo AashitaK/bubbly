@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, size_column=None, color_column=None,  
+def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_column=None, color_column=None,  
                 x_title=None, y_title=None, title=None, colorbar_title=None, 
                 x_logscale=False, y_logscale=False, x_range=None, y_range=None, 
                 scale_bubble=1, colorscale=None, width=None, height=None,
