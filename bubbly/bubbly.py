@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_column=None, color_column=None,  
+def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, size_column=None, color_column=None,  
                 x_title=None, y_title=None, title=None, colorbar_title=None, 
                 x_logscale=False, y_logscale=False, x_range=None, y_range=None, 
                 scale_bubble=1, colorscale=None, width=None, height=None,
@@ -17,7 +17,13 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_col
             color_column = None
         
     # Set the variables for making the grid
-    years = dataset[time_column].unique()
+    if time_column:
+        years = dataset[time_column].unique()
+    else:
+        years = None
+        show_slider = False
+        show_button = False
+        
     column_names = [x_column, y_column, bubble_column]
     
     if size_column:
@@ -30,12 +36,11 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_col
     if category_column:
         categories = dataset[category_column].unique()
         col_name_template = '{}+{}+{}_grid'
-        grid = make_grid_with_categories(dataset, col_name_template, column_names, 
-                                         time_column, category_column, years, categories)
+        grid = make_grid_with_categories(dataset, column_names, time_column, category_column, years, categories)
         showlegend=True
     else:
         col_name_template = '{}+{}_grid'
-        grid = make_grid(dataset, col_name_template, column_names, time_column, years)
+        grid = make_grid(dataset, column_names, time_column, years)
         showlegend=False
         
     # Set the layout
@@ -52,40 +57,54 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_col
         sizeref = None
         
     # Add the frames
-    year = min(years) # The earliest year for the base frame
     if category_column:
         # Add the base frame
         for category in categories:
-            trace = get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, 
-                                             size_column, sizeref, scale_bubble, category=category)
+            if time_column:
+                year = min(years) # The earliest year for the base frame
+                col_name_template_year = col_name_template.format(year, {}, {})
+            else:
+                col_name_template_year = '{}+{}_grid'
+            trace = get_trace(grid, col_name_template_year, x_column, y_column, bubble_column, 
+                            size_column, sizeref, scale_bubble, category=category)
             figure['data'].append(trace)
             
         # Add time frames
-        for year in years:
-            frame = {'data': [], 'name': str(year)}
-            for category in categories:
-                trace = get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, 
-                                                 size_column, sizeref, scale_bubble, category=category)
-                frame['data'].append(trace)
+        if time_column: # Only if time_column is not None
+            for year in years:
+                frame = {'data': [], 'name': str(year)}
+                for category in categories:
+                    col_name_template_year = col_name_template.format(year, {}, {})
+                    trace = get_trace(grid, col_name_template_year, x_column, y_column, bubble_column, 
+                                    size_column, sizeref, scale_bubble, category=category)
+                    frame['data'].append(trace)
 
-            figure['frames'].append(frame) 
+                figure['frames'].append(frame) 
 
-            if show_slider:
-                add_slider_steps(sliders_dict, year)
+                if show_slider:
+                    add_slider_steps(sliders_dict, year)
     else:
         # Add the base frame
-        trace = get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, 
+        if time_column:
+            year = min(years) # The earliest year for the base frame
+            col_name_template_year = col_name_template.format(year, {})
+        else:
+            col_name_template_year = '{}_grid'
+        trace = get_trace(grid, col_name_template_year, x_column, y_column, bubble_column, 
                         size_column, sizeref, scale_bubble, color_column, colorscale, show_colorbar, colorbar_title)
         figure['data'].append(trace)
+        
         # Add time frames
-        for year in years:
-            frame = {'data': [], 'name': str(year)}
-            trace = get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, 
-                            size_column, sizeref, scale_bubble, color_column, colorscale, show_colorbar, colorbar_title)
-            frame['data'].append(trace)
-            figure['frames'].append(frame) 
-            if show_slider:
-                add_slider_steps(sliders_dict, year) 
+        if time_column: # Only if time_column is not None
+            for year in years:
+                col_name_template_year = col_name_template.format(year, {})
+                frame = {'data': [], 'name': str(year)}
+                trace = get_trace(grid, col_name_template_year, x_column, y_column, bubble_column, 
+                                size_column, sizeref, scale_bubble, color_column, colorscale, show_colorbar, colorbar_title)
+                frame['data'].append(trace)
+                figure['frames'].append(frame) 
+                if show_slider:
+                    add_slider_steps(sliders_dict, year) 
     
     # Set ranges for the axes
     if x_range is None:
@@ -102,50 +121,68 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_col
         
     return figure
 
-
-def make_grid(dataset, col_name_template, column_names, time_column, years=None):
+def make_grid(dataset, column_names, time_column, years=None):
     '''Makes the grid for the plot as a pandas DataFrame by-passing the use of `plotly.grid_objs`
     that is unavailable in the offline mode for `plotly`. The grids are designed using the `col_name_template`
     from the `column_names` of the `dataset`.'''
     
     grid = pd.DataFrame()
-    if years is None:
-        years = dataset[time_column].unique()
-        
-    for year in years:
-        dataset_by_year = dataset[(dataset[time_column] == int(year))]
+    if time_column:
+        col_name_template = '{}+{}_grid'
+        if years is None:
+            years = dataset[time_column].unique()
+
+        for year in years:
+            dataset_by_year = dataset[(dataset[time_column] == int(year))]
+            for col_name in column_names:
+                # Each column name is unique
+                temp = col_name_template.format(year, col_name)
+                if dataset_by_year[col_name].size != 0:
+                    grid = grid.append({'value': list(dataset_by_year[col_name]), 'key': temp}, ignore_index=True)
+    else:
+        # Check if this can be simplified
         for col_name in column_names:
             # Each column name is unique
-            temp = col_name_template.format(year, col_name)
-            if dataset_by_year[col_name].size != 0:
-                grid = grid.append({'value': list(dataset_by_year[col_name]), 'key': temp}, ignore_index=True)
+            grid = grid.append({'value': list(dataset[col_name]), 'key': col_name + '_grid'}, ignore_index=True)
+        
     return grid
 
-
-def make_grid_with_categories(dataset, col_name_template, column_names, time_column, category_column, years=None, categories=None):
+def make_grid_with_categories(dataset, column_names, time_column, category_column, years=None, categories=None):
     '''Makes the grid for the plot as a pandas DataFrame by-passing the use of plotly.grid_objs
     that is unavailable in the offline mode for plotly. The grids are designed using the `col_name_template`
     from the `column_names` of the `dataset` using the `category_column` for catergories.'''
     
     grid = pd.DataFrame()
     if categories is None:
-        categories = dataset[category_column].unique() 
-    if years is None:
-        years = dataset[time_column].unique()
-    for year in years:
+        categories = dataset[category_column].unique()
+    if time_column:
+        col_name_template = '{}+{}+{}_grid'
+        if years is None:
+            years = dataset[time_column].unique()
+            
+        for year in years:
+            for category in categories:
+                dataset_by_year_and_cat = dataset[(dataset[time_column] == int(year)) & (dataset[category_column] == category)]
+                for col_name in column_names:
+                    # Each column name is unique
+                    temp = col_name_template.format(year, col_name, category)
+                    if dataset_by_year_and_cat[col_name].size != 0:
+                        grid = grid.append({'value': list(dataset_by_year_and_cat[col_name]), 'key': temp}, ignore_index=True) 
+    else:
+        col_name_template = '{}+{}_grid'
         for category in categories:
-            dataset_by_year_and_cat = dataset[(dataset[time_column] == int(year)) & (dataset[category_column] == category)]
+            dataset_by_cat = dataset[(dataset[category_column] == category)]
             for col_name in column_names:
                 # Each column name is unique
-                temp = col_name_template.format(year, col_name, category)
-                if dataset_by_year_and_cat[col_name].size != 0:
-                    grid = grid.append({'value': list(dataset_by_year_and_cat[col_name]), 'key': temp}, ignore_index=True) 
+                temp = col_name_template.format(col_name, category)
+                if dataset_by_cat[col_name].size != 0:
+                        grid = grid.append({'value': list(dataset_by_cat[col_name]), 'key': temp}, ignore_index=True) 
+        
     return grid
 
-  
  
 def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, 
-            show_slider=True, slider_scale=None, show_button=True, showlegend=False,
+            show_slider=True, slider_scale=None, show_button=True, show_legend=False,
             width=None, height=None):
     '''Sets the layout for the figure.'''
     
@@ -167,7 +204,7 @@ def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logsc
         
     figure['layout']['title'] = title    
     figure['layout']['hovermode'] = 'closest'
-    figure['layout']['showlegend'] = showlegend
+    figure['layout']['showlegend'] = show_legend
     figure['layout']['margin'] = dict(b=50, t=50, pad=5)
     if width:
         figure['layout']['width'] = width
@@ -273,17 +310,16 @@ def set_range(values, logscale=False):
         rmax = max(values)*1.4
         
     return [rmin, rmax] 
-    
-    
-def get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, size_column=None, 
+
+
+def get_trace(grid, col_name_template, x_column, y_column, bubble_column, size_column=None, 
                          sizeref=200000, scale_bubble=1, color_column=None, colorscale=None, show_colorbar=True,
                          colorbar_title=None, category=None):
     ''' Makes the trace for the data as a dictionary object that can be added to the figure or time frames.'''
-    
     trace = {
-        'x': grid.loc[grid['key']==col_name_template.format(year, x_column, category), 'value'].values[0],
-        'y': grid.loc[grid['key']==col_name_template.format(year, y_column, category), 'value'].values[0],
-        'text': grid.loc[grid['key']==col_name_template.format(year, bubble_column, category), 'value'].values[0],
+        'x': grid.loc[grid['key']==col_name_template.format(x_column, category), 'value'].values[0],
+        'y': grid.loc[grid['key']==col_name_template.format(y_column, category), 'value'].values[0],
+        'text': grid.loc[grid['key']==col_name_template.format(bubble_column, category), 'value'].values[0],
         'mode': 'markers'
         }
     
@@ -292,8 +328,8 @@ def get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, 
             trace['marker'] = {
                 'sizemode': 'area',
                 'sizeref': sizeref,
-                'size': grid.loc[grid['key']==col_name_template.format(year, size_column, category), 'value'].values[0],
-                'color': grid.loc[grid['key']==col_name_template.format(year, color_column), 'value'].values[0],
+                'size': grid.loc[grid['key']==col_name_template.format(size_column, category), 'value'].values[0],
+                'color': grid.loc[grid['key']==col_name_template.format(color_column), 'value'].values[0],
                 'colorbar': {'title': colorbar_title},
                 'colorscale': colorscale
             }
@@ -301,7 +337,7 @@ def get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, 
             trace['marker'] = {
                 'sizemode': 'area',
                 'sizeref': sizeref,
-                'size': grid.loc[grid['key']==col_name_template.format(year, size_column, category), 'value'].values[0],
+                'size': grid.loc[grid['key']==col_name_template.format(size_column, category), 'value'].values[0],
             }
     else:
         trace['marker'] = {
