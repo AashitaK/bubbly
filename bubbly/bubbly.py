@@ -12,7 +12,7 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_col
     # color_column is not None and categorical, in which case set color_column as None
     category_column = None
     if color_column:
-        if dataset[color_column].dtype.name in ['category', 'object']:
+        if dataset[color_column].dtype.name in ['category', 'object', 'bool']:
             category_column = color_column
             color_column = None
         
