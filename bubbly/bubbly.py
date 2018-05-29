@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_column=None, color_column=None,  
+def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, size_column=None, color_column=None,  
                 x_title=None, y_title=None, title=None, colorbar_title=None, 
                 x_logscale=False, y_logscale=False, x_range=None, y_range=None, 
                 scale_bubble=1, colorscale=None, width=None, height=None,
@@ -56,17 +56,17 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_col
     if category_column:
         # Add the base frame
         for category in categories:
-            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, bubble_column, 
+            trace = get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, 
                                              size_column, sizeref, scale_bubble, category=category)
-            figure['data'].append(data_dict)
+            figure['data'].append(trace)
             
         # Add time frames
         for year in years:
             frame = {'data': [], 'name': str(year)}
             for category in categories:
-                data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, bubble_column, 
+                trace = get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, 
                                                  size_column, sizeref, scale_bubble, category=category)
-                frame['data'].append(data_dict)
+                frame['data'].append(trace)
 
             figure['frames'].append(frame) 
 
@@ -74,15 +74,15 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column, size_col
                 add_slider_steps(sliders_dict, year)
     else:
         # Add the base frame
-        data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, bubble_column, 
+        trace = get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, 
                         size_column, sizeref, scale_bubble, color_column, colorscale, show_colorbar, colorbar_title)
-        figure['data'].append(data_dict)
+        figure['data'].append(trace)
         # Add time frames
         for year in years:
             frame = {'data': [], 'name': str(year)}
-            data_dict = make_data_dictionary(grid, col_name_template, year, x_column, y_column, bubble_column, 
+            trace = get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, 
                             size_column, sizeref, scale_bubble, color_column, colorscale, show_colorbar, colorbar_title)
-            frame['data'].append(data_dict)
+            frame['data'].append(trace)
             figure['frames'].append(frame) 
             if show_slider:
                 add_slider_steps(sliders_dict, year) 
@@ -275,12 +275,12 @@ def set_range(values, logscale=False):
     return [rmin, rmax] 
     
     
-def make_data_dictionary(grid, col_name_template, year, x_column, y_column, bubble_column, size_column=None, 
+def get_trace(grid, col_name_template, year, x_column, y_column, bubble_column, size_column=None, 
                          sizeref=200000, scale_bubble=1, color_column=None, colorscale=None, show_colorbar=True,
                          colorbar_title=None, category=None):
-    ''' Makes the dictionary for the data that can be added to the figure or time frames.'''
+    ''' Makes the trace for the data as a dictionary object that can be added to the figure or time frames.'''
     
-    data_dict = {
+    trace = {
         'x': grid.loc[grid['key']==col_name_template.format(year, x_column, category), 'value'].values[0],
         'y': grid.loc[grid['key']==col_name_template.format(year, y_column, category), 'value'].values[0],
         'text': grid.loc[grid['key']==col_name_template.format(year, bubble_column, category), 'value'].values[0],
@@ -289,7 +289,7 @@ def make_data_dictionary(grid, col_name_template, year, x_column, y_column, bubb
     
     if size_column:
         if color_column:
-            data_dict['marker'] = {
+            trace['marker'] = {
                 'sizemode': 'area',
                 'sizeref': sizeref,
                 'size': grid.loc[grid['key']==col_name_template.format(year, size_column, category), 'value'].values[0],
@@ -298,17 +298,17 @@ def make_data_dictionary(grid, col_name_template, year, x_column, y_column, bubb
                 'colorscale': colorscale
             }
         else:
-            data_dict['marker'] = {
+            trace['marker'] = {
                 'sizemode': 'area',
                 'sizeref': sizeref,
                 'size': grid.loc[grid['key']==col_name_template.format(year, size_column, category), 'value'].values[0],
             }
     else:
-        data_dict['marker'] = {
+        trace['marker'] = {
             'size': 10*scale_bubble,
         }
         
     if category:
-        data_dict['name'] = category
+        trace['name'] = category
         
-    return data_dict
+    return trace
