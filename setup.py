@@ -5,10 +5,10 @@ def readme():
         return file.read()
 
 setup(name='bubbly',
-      version='1.0.0',
+      version='1.0.1',
       description='A module for plotting interactive and animated bubble charts using Plotly',
       long_description=readme(),
-      url='https://github.com/AashitaK/nyt-comments',
+      url='https://github.com/AashitaK/bubbly',
       keywords=['Plotly', 'bubble charts', 'animated graphs', 'interactive graphs'],
       author='Aashita Kesarwani',
       author_email='kesar01@gmail.com',
