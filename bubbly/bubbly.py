@@ -5,7 +5,7 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, siz
                 x_title=None, y_title=None, title=None, colorbar_title=None, 
                 x_logscale=False, y_logscale=False, x_range=None, y_range=None, 
                 scale_bubble=1, colorscale=None, width=None, height=None,
-                show_slider=True, show_button=True, show_colorbar=True):
+                show_slider=True, show_button=True, show_colorbar=True, show_legend=None):
     ''' Makes the animated and interactive bubble charts from a given dataset.'''
     
     # Set category_column as None and update it as color_column only in case
@@ -37,11 +37,17 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, siz
         categories = dataset[category_column].unique()
         col_name_template = '{}+{}+{}_grid'
         grid = make_grid_with_categories(dataset, column_names, time_column, category_column, years, categories)
-        showlegend=True
+        if show_legend is None:
+          showlegend = True
+        else: 
+          showlegend = show_legend
     else:
         col_name_template = '{}+{}_grid'
         grid = make_grid(dataset, column_names, time_column, years)
-        showlegend=False
+        if show_legend is None:
+          showlegend = False
+        else: 
+          showlegend = show_legend
         
     # Set the layout
     if show_slider:          
