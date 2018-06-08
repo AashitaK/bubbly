@@ -1,7 +1,7 @@
 bubbly
 ******************************
 
-Bubbly is a module for plotting interactive and animated *bubble charts* using *Plotly*. The animated bubble charts can accomodate six variables in total viz. X-axis, Y-axis, time, dots, their size and their color in a compact and captivating way. The function ``bubbleplot`` is easy to use with plenty of customization and returns a ``figure`` object that is a dictionary in a suitable format for use with ``plotly``. Bubbly is especially suited for use in Jupyter notebooks and is designed to work with ``plotly``'s offline mode such as in Kaggle kernels. 
+Bubbly is a package for plotting interactive and animated *bubble charts* using *Plotly*. The animated bubble charts can accommodate six variables in total viz. X-axis, Y-axis, time, dots, their size and their color in a compact and captivating way. The function ``bubbleplot`` is easy to use with plenty of customization and returns a ``figure`` object that is a dictionary in a suitable format for use with ``plotly``. Bubbly is especially suited for use in Jupyter notebooks and is designed to work with ``plotly``'s offline mode such as in Kaggle kernels. 
 
 Dependencies
 ------------
