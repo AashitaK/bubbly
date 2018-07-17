@@ -1,17 +1,19 @@
+import numpy as np 
 import pandas as pd
-import numpy as np
 
-def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, size_column=None, color_column=None,  
-                x_title=None, y_title=None, title=None, colorbar_title=None, 
-                x_logscale=False, y_logscale=False, x_range=None, y_range=None, 
-                scale_bubble=1, colorscale=None, width=None, height=None,
-                show_slider=True, show_button=True, show_colorbar=True, show_legend=None):
+def bubbleplot(dataset, x_column, y_column, bubble_column, z_column=None,
+               time_column=None, size_column=None, color_column=None,   
+               x_logscale=False, y_logscale=False, z_logscale=False, 
+               x_range=None, y_range=None, z_range=None, 
+               x_title=None, y_title=None, z_title=None, title=None, colorbar_title=None,
+               scale_bubble=1, colorscale=None, width=None, height=None,
+               show_slider=True, show_button=True, show_colorbar=True, show_legend=None):
     ''' Makes the animated and interactive bubble charts from a given dataset.'''
     
     # Set category_column as None and update it as color_column only in case
     # color_column is not None and categorical, in which case set color_column as None
     category_column = None
-    if color_column:
+    if color_column: # Can be numerical or categorical
         if dataset[color_column].dtype.name in ['category', 'object', 'bool']:
             category_column = color_column
             color_column = None
@@ -24,7 +26,15 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, siz
         show_slider = False
         show_button = False
         
-    column_names = [x_column, y_column, bubble_column]
+    column_names = [x_column, y_column]
+    
+    if z_column:
+        column_names.append(z_column)
+        axes3D = True
+    else:
+        axes3D = False
+    
+    column_names.append(bubble_column)
     
     if size_column:
         column_names.append(size_column)
@@ -38,24 +48,26 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, siz
         col_name_template = '{}+{}+{}_grid'
         grid = make_grid_with_categories(dataset, column_names, time_column, category_column, years, categories)
         if show_legend is None:
-          showlegend = True
+            showlegend = True
         else: 
-          showlegend = show_legend
+            showlegend = show_legend
     else:
         col_name_template = '{}+{}_grid'
         grid = make_grid(dataset, column_names, time_column, years)
         if show_legend is None:
-          showlegend = False
+            showlegend = False
         else: 
-          showlegend = show_legend
+            showlegend = show_legend
         
     # Set the layout
-    if show_slider:          
-        figure, sliders_dict = set_layout(x_title, y_title, title, x_logscale, y_logscale, 
-                show_slider, years, show_button, showlegend, width, height)
+    if show_slider:
+        slider_scale = years
     else:
-        figure = set_layout(x_title, y_title, title, x_logscale, y_logscale, 
-                show_slider, None, show_button, showlegend, width, height)
+        slider_scale = None
+                
+    figure, sliders_dict = set_layout(x_title, y_title, z_title, title, 
+                                x_logscale, y_logscale, z_logscale, axes3D,
+                                show_slider, slider_scale, show_button, showlegend, width, height)
     
     if size_column:
         sizeref = 2.*max(dataset[size_column])/(scale_bubble*80**2) # Set the reference size for the bubbles
@@ -71,24 +83,31 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, siz
                 col_name_template_year = col_name_template.format(year, {}, {})
             else:
                 col_name_template_year = '{}+{}_grid'
-            trace = get_trace(grid, col_name_template_year, x_column, y_column, bubble_column, 
-                            size_column, sizeref, scale_bubble, category=category)
+            trace = get_trace(grid, col_name_template_year, x_column, y_column, 
+                              bubble_column, z_column, size_column, 
+                              sizeref, scale_bubble, category=category)
+            if z_column:
+                trace['type'] = 'scatter3d'
             figure['data'].append(trace)
-            
+           
         # Add time frames
         if time_column: # Only if time_column is not None
             for year in years:
                 frame = {'data': [], 'name': str(year)}
                 for category in categories:
                     col_name_template_year = col_name_template.format(year, {}, {})
-                    trace = get_trace(grid, col_name_template_year, x_column, y_column, bubble_column, 
-                                    size_column, sizeref, scale_bubble, category=category)
+                    trace = get_trace(grid, col_name_template_year, x_column, y_column, 
+                                      bubble_column, z_column, size_column, 
+                                      sizeref, scale_bubble, category=category)
+                    if z_column:
+                        trace['type'] = 'scatter3d'
                     frame['data'].append(trace)
 
                 figure['frames'].append(frame) 
 
                 if show_slider:
                     add_slider_steps(sliders_dict, year)
+                
     else:
         # Add the base frame
         if time_column:
@@ -96,8 +115,12 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, siz
             col_name_template_year = col_name_template.format(year, {})
         else:
             col_name_template_year = '{}_grid'
-        trace = get_trace(grid, col_name_template_year, x_column, y_column, bubble_column, 
-                        size_column, sizeref, scale_bubble, color_column, colorscale, show_colorbar, colorbar_title)
+        trace = get_trace(grid, col_name_template_year, x_column, y_column, 
+                          bubble_column, z_column, size_column, 
+                          sizeref, scale_bubble, color_column, 
+                          colorscale, show_colorbar, colorbar_title)
+        if z_column:
+                trace['type'] = 'scatter3d'
         figure['data'].append(trace)
         
         # Add time frames
@@ -105,8 +128,12 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, siz
             for year in years:
                 col_name_template_year = col_name_template.format(year, {})
                 frame = {'data': [], 'name': str(year)}
-                trace = get_trace(grid, col_name_template_year, x_column, y_column, bubble_column, 
-                                size_column, sizeref, scale_bubble, color_column, colorscale, show_colorbar, colorbar_title)
+                trace = get_trace(grid, col_name_template_year, x_column, y_column, 
+                                  bubble_column, z_column, size_column, 
+                                  sizeref, scale_bubble, color_column, 
+                                  colorscale, show_colorbar, colorbar_title)
+                if z_column:
+                    trace['type'] = 'scatter3d'
                 frame['data'].append(trace)
                 figure['frames'].append(frame) 
                 if show_slider:
@@ -118,13 +145,20 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, time_column=None, siz
     
     if y_range is None:
         y_range = set_range(dataset[y_column], y_logscale)
-        
-    figure['layout']['xaxis']['range'] = x_range
-    figure['layout']['yaxis']['range'] = y_range
     
+    if axes3D:
+        if z_range is None:
+            z_range = set_range(dataset[z_column], z_logscale)
+        figure['layout']['scene']['xaxis']['range'] = x_range
+        figure['layout']['scene']['yaxis']['range'] = y_range
+        figure['layout']['scene']['zaxis']['range'] = z_range
+    else:
+        figure['layout']['xaxis']['range'] = x_range
+        figure['layout']['yaxis']['range'] = y_range
+        
     if show_slider:
         figure['layout']['sliders'] = [sliders_dict]
-        
+     
     return figure
 
 def make_grid(dataset, column_names, time_column, years=None):
@@ -187,7 +221,8 @@ def make_grid_with_categories(dataset, column_names, time_column, category_colum
     return grid
 
  
-def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logscale=False, 
+def set_layout(x_title=None, y_title=None, z_title=None, title=None,
+            x_logscale=False, y_logscale=False, z_logscale=False, axes3D=False, 
             show_slider=True, slider_scale=None, show_button=True, show_legend=False,
             width=None, height=None):
     '''Sets the layout for the figure.'''
@@ -200,18 +235,17 @@ def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logsc
     }
     
     # Start with filling the layout first
-    figure['layout']['xaxis'] = {'title': x_title, 'autorange': False}
-    figure['layout']['yaxis'] = {'title': y_title, 'autorange': False} 
-
-    if x_logscale:
-        figure['layout']['xaxis']['type'] = 'log'
-    if y_logscale:
-        figure['layout']['yaxis']['type'] = 'log'
+    if axes3D:
+        figure = set_3Daxes(figure, x_title, y_title, z_title, 
+            x_logscale, y_logscale, z_logscale)
+    else:
+        figure = set_2Daxes(figure, x_title, y_title, x_logscale, y_logscale)
         
     figure['layout']['title'] = title    
     figure['layout']['hovermode'] = 'closest'
     figure['layout']['showlegend'] = show_legend
     figure['layout']['margin'] = dict(b=50, t=50, pad=5)
+    
     if width:
         figure['layout']['width'] = width
     if height:
@@ -220,19 +254,48 @@ def set_layout(x_title=None, y_title=None, title=None, x_logscale=False, y_logsc
     # Add slider for the time scale
     if show_slider: 
         sliders_dict = add_slider(figure, slider_scale)
+    else:
+        sliders_dict = {}
     
     # Add a pause-play button
     if show_button:
         add_button(figure)
-
+        
     # Return the figure object
-    if show_slider:
-        return figure, sliders_dict
-    else:
-        return figure
+    return figure, sliders_dict
+
+def set_2Daxes(figure, x_title=None, y_title=None, x_logscale=False, y_logscale=False):
+    '''Sets 2D axes'''
     
+    figure['layout']['xaxis'] = {'title': x_title, 'autorange': False}
+    figure['layout']['yaxis'] = {'title': y_title, 'autorange': False} 
+
+    if x_logscale:
+        figure['layout']['xaxis']['type'] = 'log'
+    if y_logscale:
+        figure['layout']['yaxis']['type'] = 'log'
+    return figure
+        
+def set_3Daxes(figure, x_title=None, y_title=None, z_title=None, 
+            x_logscale=False, y_logscale=False, z_logscale=False):
+    '''Sets 3D axes'''
     
+    figure['layout']['scene'] = {}
+    figure['layout']['scene']['xaxis'] = {'title': x_title, 'autorange': False}
+    figure['layout']['scene']['yaxis'] = {'title': y_title, 'autorange': False} 
+    figure['layout']['scene']['zaxis'] = {'title': z_title, 'autorange': False} 
+
+    if x_logscale:
+        figure['layout']['scene']['xaxis']['type'] = 'log'
+    if y_logscale:
+        figure['layout']['scene']['yaxis']['type'] = 'log'
+    if z_logscale:
+        figure['layout']['scene']['zaxis']['type'] = 'log'
+    return figure
+        
 def add_slider(figure, slider_scale):
+    '''Adds slider for animation'''
+    
     figure['layout']['sliders'] = {
         'args': [
             'slider.value', {
@@ -278,6 +341,8 @@ def add_slider_steps(sliders_dict, year):
     sliders_dict['steps'].append(slider_step)
     
 def add_button(figure):
+    '''Adds the pause-play button for animation'''
+    
     figure['layout']['updatemenus'] = [
         {
             'buttons': [
@@ -318,17 +383,20 @@ def set_range(values, logscale=False):
     return [rmin, rmax] 
 
 
-def get_trace(grid, col_name_template, x_column, y_column, bubble_column, size_column=None, 
+def get_trace(grid, col_name_template, x_column, y_column, bubble_column, z_column=None, size_column=None, 
                          sizeref=200000, scale_bubble=1, color_column=None, colorscale=None, show_colorbar=True,
                          colorbar_title=None, category=None):
     ''' Makes the trace for the data as a dictionary object that can be added to the figure or time frames.'''
+    
     trace = {
         'x': grid.loc[grid['key']==col_name_template.format(x_column, category), 'value'].values[0],
         'y': grid.loc[grid['key']==col_name_template.format(y_column, category), 'value'].values[0],
         'text': grid.loc[grid['key']==col_name_template.format(bubble_column, category), 'value'].values[0],
         'mode': 'markers'
         }
-    
+    if z_column:
+        trace['z'] = grid.loc[grid['key']==col_name_template.format(z_column, category), 'value'].values[0]
+        
     if size_column:
         if color_column:
             trace['marker'] = {
@@ -354,3 +422,5 @@ def get_trace(grid, col_name_template, x_column, y_column, bubble_column, size_c
         trace['name'] = category
         
     return trace
+
+
