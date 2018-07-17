@@ -273,7 +273,7 @@ def add_slider_steps(sliders_dict, year):
          'mode': 'immediate',
        'transition': {'duration': 300}}
      ],
-     'label': year,
+     'label': str(year),
      'method': 'animate'}
     sliders_dict['steps'].append(slider_step)
     
