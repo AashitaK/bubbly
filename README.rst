@@ -30,7 +30,9 @@ Usage
     x_title="GDP per Capita", y_title="Life Expectancy", title='Gapminder Global Indicators',
     x_logscale=True, height=650)
   iplot(figure, config={'scrollzoom': True})
-    
+
+<a href="https://imgflip.com/gif/2e98qu"><img src="https://i.imgflip.com/2e98qu.gif" title="made at imgflip.com"/></a>
+
 Please refer to the `Jupyter notebook here <https://www.kaggle.com/aashita/guide-to-animated-bubble-charts-using-plotly/>`_ for illustration of the plotting function.
 
 
