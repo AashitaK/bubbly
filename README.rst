@@ -34,7 +34,7 @@ Usage
 .. image:: https://github.com/AashitaK/aashitak.github.io/blob/master/images/bubblechart.gif
    
    
-Please refer to the `Jupyter notebook here <https://www.kaggle.com/aashita/guide-to-animated-bubble-charts-using-plotly/>`_ for more examples and illustration of the plotting function.
+Please refer to the `Jupyter notebook here <https://www.kaggle.com/aashita/guide-to-animated-bubble-charts-using-plotly/>`_ for more examples and illustration of the plotting function ``bubbleplot``.
 
 
 
