@@ -398,26 +398,20 @@ def get_trace(grid, col_name_template, x_column, y_column, bubble_column, z_colu
         trace['z'] = grid.loc[grid['key']==col_name_template.format(z_column, category), 'value'].values[0]
         
     if size_column:
-        if color_column:
-            trace['marker'] = {
-                'sizemode': 'area',
-                'sizeref': sizeref,
-                'size': grid.loc[grid['key']==col_name_template.format(size_column, category), 'value'].values[0],
-                'color': grid.loc[grid['key']==col_name_template.format(color_column), 'value'].values[0],
-                'colorbar': {'title': colorbar_title},
-                'colorscale': colorscale
-            }
-        else:
-            trace['marker'] = {
-                'sizemode': 'area',
-                'sizeref': sizeref,
-                'size': grid.loc[grid['key']==col_name_template.format(size_column, category), 'value'].values[0],
-            }
+        trace['marker'] = {
+            'sizemode': 'area',
+            'sizeref': sizeref,
+            'size': grid.loc[grid['key']==col_name_template.format(size_column, category), 'value'].values[0],
+        }
     else:
         trace['marker'] = {
             'size': 10*scale_bubble,
         }
-        
+    if color_column:
+            trace['marker']['color'] = grid.loc[grid['key']==col_name_template.format(color_column), 'value'].values[0]
+            trace['marker']['colorbar'] = {'title': colorbar_title}
+            trace['marker']['colorscale'] = colorscale
+                
     if category:
         trace['name'] = category
         
