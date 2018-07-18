@@ -31,8 +31,9 @@ Usage
     x_logscale=True, height=650)
   iplot(figure, config={'scrollzoom': True})
 
-<a href="https://imgflip.com/gif/2e98qu"><img src="https://i.imgflip.com/2e98qu.gif" title="made at imgflip.com"/></a>
-
+.. image:: https://github.com/AashitaK/aashitak.github.io/blob/master/images/bubblechart.gif
+   
+   
 Please refer to the `Jupyter notebook here <https://www.kaggle.com/aashita/guide-to-animated-bubble-charts-using-plotly/>`_ for illustration of the plotting function.
 
 
