@@ -6,8 +6,9 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, z_column=None,
                x_logscale=False, y_logscale=False, z_logscale=False, 
                x_range=None, y_range=None, z_range=None, 
                x_title=None, y_title=None, z_title=None, title=None, colorbar_title=None,
-               scale_bubble=1, colorscale=None, width=None, height=None,
-               show_slider=True, show_button=True, show_colorbar=True, show_legend=None):
+               scale_bubble=1, colorscale=None, marker_opacity=None, marker_border_width=None, 
+               show_slider=True, show_button=True, show_colorbar=True, show_legend=None,
+               width=None, height=None,):
     ''' Makes the animated and interactive bubble charts from a given dataset.'''
     
     # Set category_column as None and update it as color_column only in case
@@ -85,7 +86,8 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, z_column=None,
                 col_name_template_year = '{}+{}_grid'
             trace = get_trace(grid, col_name_template_year, x_column, y_column, 
                               bubble_column, z_column, size_column, 
-                              sizeref, scale_bubble, category=category)
+                              sizeref, scale_bubble, marker_opacity, marker_border_width,
+                              category=category)
             if z_column:
                 trace['type'] = 'scatter3d'
             figure['data'].append(trace)
@@ -98,7 +100,8 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, z_column=None,
                     col_name_template_year = col_name_template.format(year, {}, {})
                     trace = get_trace(grid, col_name_template_year, x_column, y_column, 
                                       bubble_column, z_column, size_column, 
-                                      sizeref, scale_bubble, category=category)
+                                      sizeref, scale_bubble, marker_opacity, marker_border_width,
+                                      category=category)
                     if z_column:
                         trace['type'] = 'scatter3d'
                     frame['data'].append(trace)
@@ -117,8 +120,8 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, z_column=None,
             col_name_template_year = '{}_grid'
         trace = get_trace(grid, col_name_template_year, x_column, y_column, 
                           bubble_column, z_column, size_column, 
-                          sizeref, scale_bubble, color_column, 
-                          colorscale, show_colorbar, colorbar_title)
+                          sizeref, scale_bubble, marker_opacity, marker_border_width,
+                          color_column, colorscale, show_colorbar, colorbar_title)
         if z_column:
                 trace['type'] = 'scatter3d'
         figure['data'].append(trace)
@@ -130,8 +133,8 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, z_column=None,
                 frame = {'data': [], 'name': str(year)}
                 trace = get_trace(grid, col_name_template_year, x_column, y_column, 
                                   bubble_column, z_column, size_column, 
-                                  sizeref, scale_bubble, color_column, 
-                                  colorscale, show_colorbar, colorbar_title)
+                                  sizeref, scale_bubble, marker_opacity, marker_border_width,
+                                  color_column, colorscale, show_colorbar, colorbar_title)
                 if z_column:
                     trace['type'] = 'scatter3d'
                 frame['data'].append(trace)
@@ -274,6 +277,7 @@ def set_2Daxes(figure, x_title=None, y_title=None, x_logscale=False, y_logscale=
         figure['layout']['xaxis']['type'] = 'log'
     if y_logscale:
         figure['layout']['yaxis']['type'] = 'log'
+        
     return figure
         
 def set_3Daxes(figure, x_title=None, y_title=None, z_title=None, 
@@ -291,6 +295,7 @@ def set_3Daxes(figure, x_title=None, y_title=None, z_title=None,
         figure['layout']['scene']['yaxis']['type'] = 'log'
     if z_logscale:
         figure['layout']['scene']['zaxis']['type'] = 'log'
+        
     return figure
         
 def add_slider(figure, slider_scale):
@@ -308,6 +313,7 @@ def add_slider(figure, slider_scale):
         'values': slider_scale,
         'visible': True
     }
+    
     sliders_dict = {
         'active': 0,
         'yanchor': 'top',
@@ -325,6 +331,7 @@ def add_slider(figure, slider_scale):
         'y': 0,
         'steps': []
     }
+    
     return sliders_dict
 
 def add_slider_steps(sliders_dict, year):
@@ -384,8 +391,8 @@ def set_range(values, logscale=False):
 
 
 def get_trace(grid, col_name_template, x_column, y_column, bubble_column, z_column=None, size_column=None, 
-                         sizeref=200000, scale_bubble=1, color_column=None, colorscale=None, show_colorbar=True,
-                         colorbar_title=None, category=None):
+            sizeref=200000, scale_bubble=1, marker_opacity=None, marker_border_width=None,
+            color_column=None, colorscale=None, show_colorbar=True, colorbar_title=None, category=None):
     ''' Makes the trace for the data as a dictionary object that can be added to the figure or time frames.'''
     
     trace = {
@@ -394,6 +401,7 @@ def get_trace(grid, col_name_template, x_column, y_column, bubble_column, z_colu
         'text': grid.loc[grid['key']==col_name_template.format(bubble_column, category), 'value'].values[0],
         'mode': 'markers'
         }
+    
     if z_column:
         trace['z'] = grid.loc[grid['key']==col_name_template.format(z_column, category), 'value'].values[0]
         
@@ -407,6 +415,13 @@ def get_trace(grid, col_name_template, x_column, y_column, bubble_column, z_colu
         trace['marker'] = {
             'size': 10*scale_bubble,
         }
+    
+    if marker_opacity:
+        trace['marker']['opacity'] = marker_opacity
+        
+    if marker_border_width:
+        trace['marker']['line'] = {'width': marker_border_width}
+        
     if color_column:
             trace['marker']['color'] = grid.loc[grid['key']==col_name_template.format(color_column), 'value'].values[0]
             trace['marker']['colorbar'] = {'title': colorbar_title}
