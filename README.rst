@@ -16,8 +16,8 @@ Installation
 
   pip install bubbly
   
-Usage
--------
+Usage in a Jupyter Notebook
+----------------------------
 .. code:: python
 
   from __future__ import division
