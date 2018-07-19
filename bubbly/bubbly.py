@@ -8,7 +8,7 @@ def bubbleplot(dataset, x_column, y_column, bubble_column, z_column=None,
                x_title=None, y_title=None, z_title=None, title=None, colorbar_title=None,
                scale_bubble=1, colorscale=None, marker_opacity=None, marker_border_width=None, 
                show_slider=True, show_button=True, show_colorbar=True, show_legend=None,
-               width=None, height=None,):
+               width=None, height=None):
     ''' Makes the animated and interactive bubble charts from a given dataset.'''
     
     # Set category_column as None and update it as color_column only in case
