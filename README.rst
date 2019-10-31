@@ -38,7 +38,7 @@ Please refer to the `Jupyter notebook here <https://www.kaggle.com/aashita/guide
 
 
 
-
+**Note: I am looking for someone to be the maintainer of this package. If you are interested, please contact me.**
 
 
 
