@@ -5,10 +5,10 @@ Bubbly is a package for plotting interactive and animated *bubble charts* using 
 
 Dependencies
 ------------
-* Python 3.4+
-* numpy
-* pandas 
-* plotly
+* Python == 3.10.9
+* numpy == 1.25.0
+* pandas == 2.0.3
+* plotly == 5.18.0
 
 Installation
 -------------
